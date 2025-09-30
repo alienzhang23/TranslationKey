@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>密钥生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .key-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .key-text {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #28a745;
+            word-break: break-all;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 翻译助手授权密钥生成器</h1>
+        
+        <div class="key-box">
+            <h3>密钥：</h3>
+            <div class="key-text" id="todayKey">正在生成...</div>
+            <br><br>
+            <button onclick="copyTodayKey()">复制密钥</button>
+        </div>
+        
+        <div style="text-align: center; color: #666; font-size: 12px;">
+            生成时间：<span id="generateTime"></span>
+        </div>
+    </div>
+
+    <script>
+        const BASE_KEY = "realtimeTranslation";
+        
+        function generateKeys() {
+            const now = new Date();
+            const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+            
+            // 今日密钥
+            const today = utcNow.toISOString().slice(0, 10).replace(/-/g, '');
+            const todayKey = BASE_KEY + today;
+            
+            // 昨日密钥
+            const yesterday = new Date(utcNow);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().slice(0, 10).replace(/-/g, '');
+            const yesterdayKey = BASE_KEY + yesterdayStr;
+            
+            // 显示密钥
+            document.getElementById('todayKey').textContent = todayKey;
+            document.getElementById('yesterdayKey').textContent = yesterdayKey;
+            document.getElementById('generateTime').textContent = now.toLocaleString('zh-CN');
+            
+            // 存储到全局变量
+            window.todayKey = todayKey;
+            window.yesterdayKey = yesterdayKey;
+        }
+        
+        async function copyTodayKey() {
+            if (!window.todayKey) {
+                alert('请先生成密钥！');
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(window.todayKey);
+                alert('今日密钥已复制！');
+            } catch (err) {
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = window.todayKey;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('今日密钥已复制！');
+            }
+        }
+        
+        async function copyYesterdayKey() {
+            if (!window.yesterdayKey) {
+                alert('请先生成密钥！');
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(window.yesterdayKey);
+                alert('昨日密钥已复制！');
+            } catch (err) {
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = window.yesterdayKey;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('昨日密钥已复制！');
+            }
+        }
+        
+        // 页面加载时生成密钥
+        document.addEventListener('DOMContentLoaded', generateKeys);
+        
+        // 每分钟自动刷新
+        setInterval(generateKeys, 60000);
+    </script>
+</body>
+</html>
